@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title><%= title %></title>
+</head>
+<body>
+    <h1>Users</h1>
+
+    <ul>
+    <% if (users_data.length > 0) {%>
+        <% users_data.forEach(user => { %>
+            <li>
+                <span class="user-name"><%= user.name %></span>
+                <form class="user-form" action="/get_balance" method="post">
+                    <input type="hidden" name="user-id" value="<%= user.id %>">
+                    <button>get balance</button>
+                </form>
+            </li>
+        <% }) %>
+    <% } %>
+    </ul>
+</body>
+</html>
