@@ -35,8 +35,35 @@ app.get('/users', (req, res) => {
     res.redirect('/');
 });
 
+function get_balance(time, signature, user_data) {
+    let result = Boolean(user_data);
+    let err_code = 0;
+
+    // Проверка hash
+    let user_params = new Map([
+        ['user_id', user_data.id],
+        ['merchant_id', 0],
+    ]);
+
+    let sortedArray = [...user_params].sort((a, b) => a[0].localeCompare(b[0]));
+    let sortedMap = new Map(sortedArray);
+    let sortedObject = Object.fromEntries(sortedMap);
+    let params_json = JSON.stringify(sortedObject);
+
+    let hash = crypto.createHash('sha256');
+    hash.update(time + params_json + salt);
+
+    if (hash.digest('hex') !== signature) {
+        err_code = 1;
+    }
+
+    let amount = user_data.amount.toFixed(2);
+    let bonus_amount = user_data.bonus_amount.toFixed(2);
+    let currency = user_data.currency;
+}
+
 app.post('/get_balance', (req, res) => {
-    let time = getTime();
+    const time = getTime();
     let user_id = req.body.user_id;
 
     let params = new Map([
@@ -50,7 +77,7 @@ app.post('/get_balance', (req, res) => {
 
     // Создание хэша SHA256
     let hash = crypto.createHash('sha256');
-    hash.update(salt + params_json + time);
+    hash.update(time + params_json + salt);
     const signature = hash.digest('hex');
 
     const requestData = {
@@ -59,7 +86,20 @@ app.post('/get_balance', (req, res) => {
         "hash": signature
     };
 
-    res.json(req.body);
+    Users
+        .findById(user_id)
+        .then((user_data) => {
+
+            let balanse = get_balance(time, signature, user_data);
+            res.send('res');
+
+        })
+        .catch((error) => {
+            console.log(error);
+        })
+
+    // get_balance(user_id);
+    // res.json(req.body);
 })
 
 app.use((req, res) => {
