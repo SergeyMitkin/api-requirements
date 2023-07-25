@@ -39,12 +39,25 @@ function get_balance(time, signature, user_data) {
     let result = Boolean(user_data);
     let err_code = 0;
 
-    // Проверка hash
+    // User check
+    if (!result) {
+        err_code = 3;
+    }
+
+    // Data check
     let user_params = new Map([
         ['user_id', user_data.id],
         ['merchant_id', 0],
     ]);
 
+    if (user_params.size !== 2
+        || !user_params.has("user_id")
+        || !user_params.has("merchant_id"))
+    {
+        let err_code = 2
+    }
+
+    // Hash check
     let sortedArray = [...user_params].sort((a, b) => a[0].localeCompare(b[0]));
     let sortedMap = new Map(sortedArray);
     let sortedObject = Object.fromEntries(sortedMap);
@@ -57,9 +70,27 @@ function get_balance(time, signature, user_data) {
         err_code = 1;
     }
 
-    let amount = user_data.amount.toFixed(2);
-    let bonus_amount = user_data.bonus_amount.toFixed(2);
-    let currency = user_data.currency;
+    if (err_code === 0) {
+        let amount = user_data.amount.toFixed(2);
+        let bonus_amount = user_data.bonus_amount.toFixed(2);
+        let currency = user_data.currency;
+
+        return {
+            "result": true,
+            "err_code": err_code,
+            "amount": amount,
+            "currency": currency
+        }
+    } else {
+        let amount = "";
+        let bonus_amount = "";
+        let currency = "";
+
+        return {
+            "result": false,
+            "err_code": err_code
+        }
+    }
 }
 
 app.post('/get_balance', (req, res) => {
@@ -89,10 +120,8 @@ app.post('/get_balance', (req, res) => {
     Users
         .findById(user_id)
         .then((user_data) => {
-
             let balanse = get_balance(time, signature, user_data);
-            res.send('res');
-
+            res.send(JSON.stringify(balanse));
         })
         .catch((error) => {
             console.log(error);
