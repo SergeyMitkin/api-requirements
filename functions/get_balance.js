@@ -1,4 +1,3 @@
-const crypto = require("crypto");
 const utils = require("./utils");
 
 function get_balance(salt, time, signature, user_data) {
@@ -20,7 +19,7 @@ function get_balance(salt, time, signature, user_data) {
         || !user_params.has("user_id")
         || !user_params.has("merchant_id"))
     {
-        let err_code = 2
+        err_code = 2
     }
     // Hash check
     else if (hash.digest('hex') !== signature) {
