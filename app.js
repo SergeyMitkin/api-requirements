@@ -125,10 +125,11 @@ app.post('/get_balance', (req, res) => {
         })
         .catch((error) => {
             console.log(error);
+            res.send( JSON.stringify({
+                "result": false,
+                "err_code": 4
+            }));
         })
-
-    // get_balance(user_id);
-    // res.json(req.body);
 })
 
 app.use((req, res) => {
