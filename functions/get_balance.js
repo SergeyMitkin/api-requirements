@@ -1,12 +1,15 @@
 const utils = require("./utils");
 
 function get_balance(salt, time, signature, user_data) {
+
     let result = Boolean(user_data);
     let err_code = 0;
+    let user_id = user_data.id;
     let user_params = new Map([
-        ['user_id', user_data.id],
-        ['merchant_id', 0],
+        ['user_id', user_id],
+        ['merchant_id', "0"],
     ]);
+
     let sorted_user_params = utils.paramsSort(user_params);
     let hash = utils.sha256(time, sorted_user_params, salt);
 

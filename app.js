@@ -12,6 +12,7 @@ const Users = require('./models/users'); // Users model
 // register view engine
 app.set('view engine', 'ejs');
 app.use(express.urlencoded({extended: true}));
+app.use(express.json());
 
 // MongDB connection
 const dbURI = 'mongodb+srv://new-user:test12345@cluster0.wodilhl.mongodb.net/node-tuts?retryWrites=true&w=majority';
@@ -36,14 +37,21 @@ app.get('/users', (req, res) => {
     res.redirect('/');
 });
 
+app.post('/post', (req, res) => {
+    console.log(req.body);
+
+    res.send('{"user_id": 1111}');
+})
+
 app.post('/get_balance', (req, res) => {
     const utils = require('./functions/utils');
     let time = utils.getTime();
-    let user_id = req.body.user_id;
+    let user_id = req.body.data.user_id;
+    let merchant_id = req.body.data.merchant_id;
 
     let params = new Map([
         ['user_id', user_id],
-        ['merchant_id', 0],
+        ['merchant_id', merchant_id],
     ]);
 
     let sorted_params = utils.paramsSort(params);
