@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 
 const app = express();
 const PORT = 443;
-const salt = 'get_balance';
+const salt = 'salt';
 
 const Users = require('./models/users'); // Users model
 
@@ -37,35 +37,29 @@ app.get('/users', (req, res) => {
     res.redirect('/');
 });
 
-app.post('/post', (req, res) => {
-    console.log(req.body);
-
-    res.send('{"user_id": 1111}');
-})
-
 app.post('/get_balance', (req, res) => {
     const utils = require('./functions/utils');
-    // let time = utils.getTime();
-    console.log('test');
-    let user_id = req.body.data.user_id;
-    let merchant_id = req.body.data.merchant_id;
-    let time = req.body.time;
-    let hash = req.body.hash;
 
-    let params = new Map([
-        ['user_id', user_id],
-        ['merchant_id', merchant_id],
-    ]);
+    let req_user_data = req.body.data;
+    let req_user_id = req.body.data.user_id;
+    let req_merchant_id = req.body.data.merchant_id;
+    let req_time = req.body.time;
+    let req_hash = req.body.hash;
 
-    let sorted_params = utils.paramsSort(params);
-    let signature =  utils.sha256(time, sorted_params, salt).digest('hex');
+    // let params = new Map([
+    //     ['req_user_id', req_user_id],
+    //     ['req_merchant_id', req_merchant_id],
+    // ]);
+    //
+    // let sorted_params = utils.paramsSort(params);
+    // let signature =  utils.sha256(req_time, sorted_params, salt).digest('hex');
 
     // Get user data
     Users
-        .findOne({user_id:user_id})
+        .findOne({user_id:req_user_id})
         .then((user_data) => {
             const get_balanse = require('./functions/get_balance');
-            let balanse = get_balanse.get_balance(salt, time, signature, user_data);
+            let balanse = get_balanse.get_balance(salt, req.body, user_data);
             res.send(JSON.stringify(balanse));
         })
         .catch((error) => {

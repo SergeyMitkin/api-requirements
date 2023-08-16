@@ -5,7 +5,8 @@ const usersSchema = new Schema({
     name: String,
     amount: Number,
     bonus_amount: Number,
-    currency: String
+    currency: String,
+    user_id: String
 });
 
 const Users = mongoose.model('Users', usersSchema);

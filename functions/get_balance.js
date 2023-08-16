@@ -1,31 +1,33 @@
 const utils = require("./utils");
 
-function get_balance(salt, time, signature, user_data) {
+function get_balance(salt, req_body, user_data) {
 
     let result = Boolean(user_data);
     let err_code = 0;
-    let user_id = user_data.id;
-    let user_params = new Map([
-        ['user_id', user_id],
-        ['merchant_id', "0"],
-    ]);
+    let user_id = user_data.user_id;
+    let user_params = {
+        user_id: user_id,
+        merchant_id: '0',
+    };
+    let time = utils.getDateStr();
+    let req_hash = req_body.hash;
 
-    let sorted_user_params = utils.paramsSort(user_params);
-    let hash = utils.sha256(time, sorted_user_params, salt);
+    let user_params_sort = utils.sortObject(user_params);
+    let hash = utils.sha256(time, JSON.stringify(user_params_sort), salt);
 
     // User check
     if (!result) {
         err_code = 3;
     }
     // Data check
-    else if (user_params.size !== 2
-        || !user_params.has("user_id")
-        || !user_params.has("merchant_id"))
+    else if (Object.keys(user_params_sort).length !== 2
+        || !'user_id' in user_params_sort
+        || !'merchant_id' in user_params_sort)
     {
         err_code = 2
     }
     // Hash check
-    else if (hash.digest('hex') !== signature) {
+    else if (hash.digest('hex') !== req_hash) {
         err_code = 1;
     }
 

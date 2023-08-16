@@ -1,24 +1,31 @@
 const crypto = require("crypto");
 
-function getTime() {
-    let currentDate = new Date();
-    let day = ("0" + currentDate.getDate()).slice(-2);
-    let month = ("0" + (currentDate.getMonth() + 1)).slice(-2);
-    let year = currentDate.getFullYear();
-    let hours = ("0" + currentDate.getHours()).slice(-2);
-    let minutes = ("0" + currentDate.getMinutes()).slice(-2);
-    let seconds = ("0" + currentDate.getSeconds()).slice(-2);
-
-    return day + "-" + month + "-" + year + " " + hours + ":" + minutes + ":" + seconds;
+function getDateStr(){
+    let date = new Date();
+    return date.getDate() + '.' + (date.getMonth() + 1) + '.' + date.getFullYear();
 }
 
-function paramsSort (obj) {
-    let sortedArray = [...obj].sort((a, b) => a[0].localeCompare(b[0]));
-    let sortedMap = new Map(sortedArray);
-    let sortedObject = Object.fromEntries(sortedMap);
+function sortObject(unordered, sortArrays = false) {
+    if (!unordered || typeof unordered !== 'object') {
+        return unordered;
+    }
 
-    return JSON.stringify(sortedObject);
-}
+    if (Array.isArray(unordered)) {
+        const newArr = unordered.map((item) => sortObject(item, sortArrays));
+        if (sortArrays) {
+            newArr.sort();
+        }
+        return newArr;
+    }
+
+    const ordered = {};
+    Object.keys(unordered)
+        .sort()
+        .forEach((key) => {
+            ordered[key] = sortObject(unordered[key], sortArrays);
+        });
+    return ordered;
+};
 
 function sha256(time, sorted_user_params, salt){
     let hash = crypto.createHash('sha256');
@@ -28,7 +35,7 @@ function sha256(time, sorted_user_params, salt){
 }
 
 module.exports = {
-    getTime: getTime,
-    paramsSort: paramsSort,
-    sha256: sha256
+    getDateStr: getDateStr,
+    sha256: sha256,
+    sortObject: sortObject
 };
