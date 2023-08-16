@@ -29,7 +29,7 @@ app.post('/get_balance', (req, res) => {
     Users
         .findOne({user_id:user_id})
         .then((user_data) => {
-            const get_balanse = require('./functions/get_balance');
+            let get_balanse = require('./functions/get_balance');
             let balanse = get_balanse.get_balance(salt, req.body, user_data);
             res.send(JSON.stringify(balanse));
         })
