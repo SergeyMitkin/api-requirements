@@ -45,9 +45,12 @@ app.post('/post', (req, res) => {
 
 app.post('/get_balance', (req, res) => {
     const utils = require('./functions/utils');
-    let time = utils.getTime();
+    // let time = utils.getTime();
+    console.log('test');
     let user_id = req.body.data.user_id;
     let merchant_id = req.body.data.merchant_id;
+    let time = req.body.time;
+    let hash = req.body.hash;
 
     let params = new Map([
         ['user_id', user_id],
@@ -55,12 +58,11 @@ app.post('/get_balance', (req, res) => {
     ]);
 
     let sorted_params = utils.paramsSort(params);
-    let hash = utils.sha256(time, sorted_params, salt);
-    let signature = hash.digest('hex');
+    let signature =  utils.sha256(time, sorted_params, salt).digest('hex');
 
     // Get user data
     Users
-        .findById(user_id)
+        .findOne({user_id:user_id})
         .then((user_data) => {
             const get_balanse = require('./functions/get_balance');
             let balanse = get_balanse.get_balance(salt, time, signature, user_data);
@@ -77,7 +79,7 @@ app.post('/get_balance', (req, res) => {
 
 // Error 404
 app.use((req, res) => {
-    res.status(404).render('404', { title: '404'});
+    res.status(404).render('404', { title: '404' });
 })
 
 // Https server
