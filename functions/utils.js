@@ -25,7 +25,7 @@ function sortObject(unordered, sortArrays = false) {
             ordered[key] = sortObject(unordered[key], sortArrays);
         });
     return ordered;
-};
+}
 
 function sha256(time, sorted_user_params, salt){
     let hash = crypto.createHash('sha256');
@@ -38,4 +38,4 @@ module.exports = {
     getDateStr: getDateStr,
     sha256: sha256,
     sortObject: sortObject
-};
+}
