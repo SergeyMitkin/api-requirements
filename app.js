@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const app = express();
 const PORT = 443;
 const salt = 'salt';
+const merchant_id = 0;
 
 const Users = require('./models/users'); // Users model
 
@@ -30,7 +31,7 @@ app.post('/get_balance', (req, res) => {
         .findOne({user_id:user_id})
         .then((user_data) => {
             let get_balanse = require('./functions/get_balance');
-            let balanse = get_balanse.get_balance(salt, req.body, user_data);
+            let balanse = get_balanse.get_balance(salt, merchant_id, req.body, user_data);
             res.send(JSON.stringify(balanse));
         })
         .catch((error) => {

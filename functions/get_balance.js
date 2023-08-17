@@ -1,6 +1,6 @@
 const utils = require("./utils");
 
-function get_balance(salt, req_body, user_data) {
+function get_balance(salt, merchant_id, req_body, user_data) {
 
     let result = Boolean(user_data);
     let err_code = 0;
@@ -10,7 +10,7 @@ function get_balance(salt, req_body, user_data) {
         let user_id = user_data.user_id;
         let user_params = {
             user_id: user_id,
-            merchant_id: '0',
+            merchant_id: String(merchant_id),
         };
         let time = utils.getDateStr();
         let req_hash = req_body.hash;
