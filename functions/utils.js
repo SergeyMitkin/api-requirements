@@ -49,19 +49,13 @@ function isAlphabetSorted(data) {
 function requestCheck(req_body) {
     let data = req_body.data;
 
-    if(
-        Object.keys(req_body).length !== 3
-        || !'time' in req_body
-        || !'data' in req_body
-        || !'hash' in req_body
-        || !'merchant_id' in data
-        || !'user_id' in data
-        || !isAlphabetSorted(data)
-    ) {
-        return false
-    }
-
-    return true;
+    return (Object.keys(req_body).length === 3
+        && 'time' in req_body
+        && 'data' in req_body
+        && 'hash' in req_body
+        && 'merchant_id' in data
+        && 'user_id' in data
+        && isAlphabetSorted(data));
 }
 
 module.exports = {
