@@ -32,10 +32,12 @@ app.post('/get_balance', (req, res) => {
         .then((user_data) => {
             let get_balanse = require('./functions/get_balance');
             let balanse = get_balanse.get_balance(salt, merchant_id, req.body, user_data);
+            res.setHeader('Content-Type', 'application/json');
             res.send(JSON.stringify(balanse));
         })
         .catch((error) => {
             console.log(error);
+            res.setHeader('Content-Type', 'application/json');
             res.send( JSON.stringify({
                 "result": false,
                 "err_code": 4
