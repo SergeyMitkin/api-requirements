@@ -1,7 +1,6 @@
 const utils = require("./utils");
 
 function get_balance(salt, merchant_id, req_body, user_data) {
-
     let result = Boolean(user_data);
     let err_code = 0;
 
