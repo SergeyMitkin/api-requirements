@@ -8,6 +8,7 @@ const PORT = 443;
 const salt = 'salt';
 const merchant_id = 0;
 
+const utils = require('./functions/utils');
 const Users = require('./models/users'); // Users model
 
 // register view engine
@@ -23,7 +24,6 @@ mongoose
     .catch((err) => console.log(err));
 
 app.post('/get_balance', (req, res) => {
-    const utils = require('./functions/utils');
     let user_id = req.body.data.user_id;
 
     // Get user data
@@ -34,6 +34,28 @@ app.post('/get_balance', (req, res) => {
             let balanse = get_balanse.get_balance(salt, merchant_id, req.body, user_data);
             res.setHeader('Content-Type', 'application/json');
             res.send(JSON.stringify(balanse));
+        })
+        .catch((error) => {
+            console.log(error);
+            res.setHeader('Content-Type', 'application/json');
+            res.send( JSON.stringify({
+                "result": false,
+                "err_code": 4
+            }));
+        })
+})
+
+app.post('/get_account_details', (req, res) => {
+    let user_id = req.body.data.user_id;
+
+    // Get user data
+    Users
+        .findOne({user_id:user_id})
+        .then((user_data) => {
+            let get_account_details = require('./functions/get_account_details');
+            let account_details = get_account_details.get_account_details(salt, merchant_id, req.body, user_data);
+            res.setHeader('Content-Type', 'application/json');
+            res.send(JSON.stringify(account_details));
         })
         .catch((error) => {
             console.log(error);
