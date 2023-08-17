@@ -34,8 +34,39 @@ function sha256(time, sorted_user_params, salt){
     return hash;
 }
 
+function isAlphabetSorted(data) {
+    let dataKeys = Object.keys(data);
+    let sortedKeys = Object.keys(data).sort();
+
+    for (let i = 0; i < dataKeys.length; i++) {
+        if (dataKeys[i] !== sortedKeys[i]) {
+            return false
+        }
+    }
+    return true;
+}
+
+function requestCheck(req_body) {
+    let data = req_body.data;
+
+    if(
+        Object.keys(req_body).length !== 3
+        || !'time' in req_body
+        || !'data' in req_body
+        || !'hash' in req_body
+        || !'merchant_id' in data
+        || !'user_id' in data
+        || !isAlphabetSorted(data)
+    ) {
+        return false
+    }
+
+    return true;
+}
+
 module.exports = {
     getDateStr: getDateStr,
     sha256: sha256,
-    sortObject: sortObject
+    sortObject: sortObject,
+    requestCheck: requestCheck
 }

@@ -18,10 +18,8 @@ function get_balance(salt, merchant_id, req_body, user_data) {
         let user_params_sort = utils.sortObject(user_params);
         let hash = utils.sha256(time, JSON.stringify(user_params_sort), salt);
 
-        // Data check
-        if (Object.keys(user_params_sort).length !== 2
-            || !'user_id' in user_params_sort
-            || !'merchant_id' in user_params_sort)
+        // Request structure and parameters check
+        if (!utils.requestCheck(req_body))
         {
             err_code = 2
         }
