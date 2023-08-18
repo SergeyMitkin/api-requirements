@@ -4,8 +4,8 @@ function withdraw(salt, merchant_id, transaction_id, req_body, user_data) {
     let result = Boolean(user_data);
     let err_code = 0;
 
-    let amount = req_body.data.amount;
-    let bonus_amount = req_body.data.bonus_amount;
+    let bet_amount = req_body.data.amount;
+    let bet_bonus_amount = req_body.data.bonus_amount;
     let bet_data = req_body.data.bet_data;
     let bonus_game = req_body.data.bonus_game;
     let currency = req_body.data.currency;
@@ -16,9 +16,9 @@ function withdraw(salt, merchant_id, transaction_id, req_body, user_data) {
     if (result) {
         let user_id = user_data.user_id;
         let user_params = {
-            amount: amount,
+            amount: bet_amount,
+            bonus_amount: bet_bonus_amount,
             bet_data: bet_data,
-            bonus_amount: bonus_amount,
             bonus_game: bonus_game,
             currency: currency,
             game_id: game_id,
@@ -29,7 +29,6 @@ function withdraw(salt, merchant_id, transaction_id, req_body, user_data) {
         };
         let time = utils.getDateStr();
         let req_hash = req_body.hash;
-
         let user_params_sort = utils.sortObject(user_params);
         let hash = utils.sha256(time, JSON.stringify(user_params_sort), salt);
 
@@ -47,15 +46,15 @@ function withdraw(salt, merchant_id, transaction_id, req_body, user_data) {
     }
 
     if (err_code === 0) {
-        let amount = user_data.amount.toFixed(2);
-        let bonus_amount = user_data.bonus_amount.toFixed(2);
+        let amount = user_data.amount - bet_amount;
+        let bonus_amount = user_data.bonus_amount - bet_bonus_amount;
         let currency = user_data.currency;
 
         return {
             "result": true,
             "err_code": err_code,
-            "amount": amount,
-            "bonus_amount": bonus_amount,
+            "amount": amount.toFixed(2),
+            "bonus_amount": bonus_amount.toFixed(2),
             "currency": currency
         }
     } else {

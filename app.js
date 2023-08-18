@@ -74,8 +74,27 @@ app.post('/withdraw', (req, res) => {
     Users
         .findOne({user_id:user_id})
         .then((user_data) => {
+            let bet_amount = req.body.data.amount;
+            let bet_bonus_amount = req.body.bonus_amount;
+
             let withdraw = require('./functions/withdraw');
             let balance = withdraw.withdraw(salt, merchant_id, transaction_id, req.body, user_data);
+
+            // Amount update
+            if (user_data && (bet_amount > 0 || bet_bonus_amount > 0)) {
+                if (bet_amount > 0) {
+                    user_data.amount = balance.amount;
+                }
+                if (bet_bonus_amount > 0) {
+                    user_data.bonus_amount = balance.bonus_amount;
+                }
+
+                user_data.save();
+            }
+
+            console.log(user_data.isModified('amount'));
+            console.log(user_data.isModified('bonus_amount'));
+
             res.setHeader('Content-Type', 'application/json');
             res.send(JSON.stringify(balance));
         })
