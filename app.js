@@ -8,7 +8,6 @@ const PORT = 443;
 const salt = 'salt';
 const merchant_id = 0;
 
-const utils = require('./functions/utils');
 const Users = require('./models/users'); // Users model
 
 // register view engine
@@ -31,14 +30,14 @@ app.post('/get_balance', (req, res) => {
         .findOne({user_id:user_id})
         .then((user_data) => {
             let get_balanse = require('./functions/get_balance');
-            let balanse = get_balanse.get_balance(salt, merchant_id, req.body, user_data);
+            let balance = get_balanse.get_balance(salt, merchant_id, req.body, user_data);
             res.setHeader('Content-Type', 'application/json');
-            res.send(JSON.stringify(balanse));
+            res.send(JSON.stringify(balance));
         })
         .catch((error) => {
             console.log(error);
             res.setHeader('Content-Type', 'application/json');
-            res.send( JSON.stringify({
+            res.send(JSON.stringify({
                 "result": false,
                 "err_code": 4
             }));
@@ -56,6 +55,29 @@ app.post('/get_account_details', (req, res) => {
             let account_details = get_account_details.get_account_details(salt, merchant_id, req.body, user_data);
             res.setHeader('Content-Type', 'application/json');
             res.send(JSON.stringify(account_details));
+        })
+        .catch((error) => {
+            console.log(error);
+            res.setHeader('Content-Type', 'application/json');
+            res.send( JSON.stringify({
+                "result": false,
+                "err_code": 4
+            }));
+        })
+})
+
+app.post('/withdraw', (req, res) => {
+    let user_id = req.body.data.user_id;
+    let transaction_id = 19;
+
+    // Get user data
+    Users
+        .findOne({user_id:user_id})
+        .then((user_data) => {
+            let withdraw = require('./functions/withdraw');
+            let balance = withdraw.withdraw(salt, merchant_id, transaction_id, req.body, user_data);
+            res.setHeader('Content-Type', 'application/json');
+            res.send(JSON.stringify(balance));
         })
         .catch((error) => {
             console.log(error);
