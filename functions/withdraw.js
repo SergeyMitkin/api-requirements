@@ -1,6 +1,6 @@
 const utils = require("./utils");
 
-function withdraw(salt, merchant_id, transaction_id, req_body, user_data) {
+function withdraw(salt, merchant_id, req_body, user_data) {
     let result = Boolean(user_data);
     let err_code = 0;
 
@@ -35,7 +35,7 @@ function withdraw(salt, merchant_id, transaction_id, req_body, user_data) {
         // Request structure and parameters check
         if (!utils.requestCheck(req_body))
         {
-            err_code = 2
+            err_code = 2;
         }
         // Hash check
         else if (hash.digest('hex') !== req_hash) {

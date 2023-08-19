@@ -68,17 +68,19 @@ app.post('/get_account_details', (req, res) => {
 
 app.post('/withdraw', (req, res) => {
     let user_id = req.body.data.user_id;
-    let transaction_id = 19;
 
     // Get user data
     Users
         .findOne({user_id:user_id})
         .then((user_data) => {
+            let withdraw = require('./functions/withdraw');
+            let Operations = require('./models/operations'); // Operations model
+
+            // Checking if current transaction_id exists
+
             let bet_amount = req.body.data.amount;
             let bet_bonus_amount = req.body.bonus_amount;
-
-            let withdraw = require('./functions/withdraw');
-            let balance = withdraw.withdraw(salt, merchant_id, transaction_id, req.body, user_data);
+            let balance = withdraw.withdraw(salt, merchant_id, req.body, user_data);
 
             // Amount update
             if (user_data && (bet_amount > 0 || bet_bonus_amount > 0)) {
@@ -88,15 +90,14 @@ app.post('/withdraw', (req, res) => {
                 if (bet_bonus_amount > 0) {
                     user_data.bonus_amount = balance.bonus_amount;
                 }
-
                 user_data.save();
             }
 
-            console.log(user_data.isModified('amount'));
-            console.log(user_data.isModified('bonus_amount'));
-
-            res.setHeader('Content-Type', 'application/json');
-            res.send(JSON.stringify(balance));
+            // If amount apdated
+            if (user_data.isModified('amount') || user_data.isModified('bonus_amount')) {
+                res.setHeader('Content-Type', 'application/json');
+                res.send(JSON.stringify(balance));
+            }
         })
         .catch((error) => {
             console.log(error);
