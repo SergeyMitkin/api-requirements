@@ -68,23 +68,22 @@ app.post('/get_account_details', (req, res) => {
 
 app.post('/withdraw', (req, res) => {
     let transaction_id = req.body.data.transaction_id;
+    let response_data;
     const Operations = require('./models/operations');
+
     res.setHeader('Content-Type', 'application/json');
 
-    let operation_res;
-
     Operations
-        .findOne({transaction_id:1})
+        .findOne({transaction_id:transaction_id})
         .then(result => {
             if (result) {
-                res.send(result.response_data);
-            } else {
-                operation_res = 'false';
+                response_data = result.response_data;
+                res.send(JSON.parse(response_data));
             }
         })
         .then(()=>{
-            // console.log('ttttt');
-            // console.log(operation_res);
+            if (!response_data) {
+            }
         })
         .catch((err) => {
             console.log(err);
