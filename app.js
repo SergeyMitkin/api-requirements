@@ -67,86 +67,48 @@ app.post('/get_account_details', (req, res) => {
 })
 
 app.post('/withdraw', (req, res) => {
-    let user_id = req.body.data.user_id;
+    let transaction_id = req.body.data.transaction_id;
+    const Operations = require('./models/operations');
     res.setHeader('Content-Type', 'application/json');
 
+    let operation_res;
+
+    Operations
+        .findOne({transaction_id:1})
+        .then(result => {
+            if (result) {
+                res.send(result.response_data);
+            } else {
+                operation_res = 'false';
+            }
+        })
+        .then(()=>{
+            // console.log('ttttt');
+            // console.log(operation_res);
+        })
+        .catch((err) => {
+            console.log(err);
+        })
+
     // Get user data
-    Users
-        .findOne({user_id:user_id})
-        .then((user_data) => {
-            let withdraw = require('./functions/withdraw');
-            let Operations = require('./models/operations'); // Operations model
-            let transaction_id = req.body.data.transaction_id;
-
-            // Checking if current transaction_id exists
-            Operations
-                .findOne({transaction_id:transaction_id})
-                .then((operation_data) => {
-                    if (operation_data) {
-                        res.send(operation_data.response_data);
-                    }
-                    else {
-                        Operations
-                            .findOne().sort('-operation_id')
-                            .then(async (max_o_d) => {
-                                let max_operation_id = max_o_d.operation_id;
-                                let bet_amount = req.body.data.amount;
-                                let bet_bonus_amount = req.body.bonus_amount;
-                                let balance = withdraw.withdraw(salt, merchant_id, req.body, user_data);
-
-                                // Amount update
-                                if (user_data && (bet_amount > 0 || bet_bonus_amount > 0)) {
-                                    if (bet_amount > 0) {
-                                        user_data.amount = balance.amount;
-                                    }
-                                    if (bet_bonus_amount > 0) {
-                                        user_data.bonus_amount = balance.bonus_amount;
-                                    }
-                                    user_data.save();
-                                }
-
-                                // If amount updated
-                                if (user_data.isModified('amount') || user_data.isModified('bonus_amount')) {
-                                    // Save operation
-                                    let new_operation = new Operations({
-                                        transaction_id: transaction_id,
-                                        operation_id: max_operation_id + 1
-                                    });
-                                    let savedOperation = await new_operation.save()
-
-                                    if(savedOperation._id) {
-                                        res.send(JSON.stringify(balance));
-                                    }
-                                }
-                            })
-                            .catch((error) => {
-                                console.log(error);
-                                res.setHeader('Content-Type', 'application/json');
-                                res.send( JSON.stringify({
-                                    "result": false,
-                                    "err_code": 4
-                                }));
-                            })
-                    }
-                })
-                .catch((error) => {
-                    console.log(error);
-                    res.setHeader('Content-Type', 'application/json');
-                    res.send( JSON.stringify({
-                        "result": false,
-                        "err_code": 4
-                    }));
-                })
-
-        })
-        .catch((error) => {
-            console.log(error);
-            res.setHeader('Content-Type', 'application/json');
-            res.send( JSON.stringify({
-                "result": false,
-                "err_code": 4
-            }));
-        })
+    // Users
+    //     .findOne({user_id:user_id})
+    //     .then((user_data) => {
+    //         let withdraw = require('./functions/withdraw');
+    //
+    //         let operation_data = withdraw.withdraw(salt, merchant_id, req.body, user_data);
+    //
+    //         console.log('res.send');
+    //         res.send(operation_data);
+    //     })
+    //     .catch((error) => {
+    //         console.log(error);
+    //         res.setHeader('Content-Type', 'application/json');
+    //         res.send( JSON.stringify({
+    //             "result": false,
+    //             "err_code": 4
+    //         }));
+    //     })
 })
 
 // Https server
