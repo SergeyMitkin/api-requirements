@@ -86,25 +86,47 @@ app.post('/withdraw', (req, res) => {
                         res.send(operation_data.response_data);
                     }
                     else {
-                        let bet_amount = req.body.data.amount;
-                        let bet_bonus_amount = req.body.bonus_amount;
-                        let balance = withdraw.withdraw(salt, merchant_id, req.body, user_data);
+                        Operations
+                            .findOne().sort('-operation_id')
+                            .then(async (max_o_d) => {
+                                let max_operation_id = max_o_d.operation_id;
+                                let bet_amount = req.body.data.amount;
+                                let bet_bonus_amount = req.body.bonus_amount;
+                                let balance = withdraw.withdraw(salt, merchant_id, req.body, user_data);
 
-                        // Amount update
-                        if (user_data && (bet_amount > 0 || bet_bonus_amount > 0)) {
-                            if (bet_amount > 0) {
-                                user_data.amount = balance.amount;
-                            }
-                            if (bet_bonus_amount > 0) {
-                                user_data.bonus_amount = balance.bonus_amount;
-                            }
-                            user_data.save();
-                        }
+                                // Amount update
+                                if (user_data && (bet_amount > 0 || bet_bonus_amount > 0)) {
+                                    if (bet_amount > 0) {
+                                        user_data.amount = balance.amount;
+                                    }
+                                    if (bet_bonus_amount > 0) {
+                                        user_data.bonus_amount = balance.bonus_amount;
+                                    }
+                                    user_data.save();
+                                }
 
-                        // If amount updated
-                        if (user_data.isModified('amount') || user_data.isModified('bonus_amount')) {
-                            res.send(JSON.stringify(balance));
-                        }
+                                // If amount updated
+                                if (user_data.isModified('amount') || user_data.isModified('bonus_amount')) {
+                                    // Save operation
+                                    let new_operation = new Operations({
+                                        transaction_id: transaction_id,
+                                        operation_id: max_operation_id + 1
+                                    });
+                                    let savedOperation = await new_operation.save()
+
+                                    if(savedOperation._id) {
+                                        res.send(JSON.stringify(balance));
+                                    }
+                                }
+                            })
+                            .catch((error) => {
+                                console.log(error);
+                                res.setHeader('Content-Type', 'application/json');
+                                res.send( JSON.stringify({
+                                    "result": false,
+                                    "err_code": 4
+                                }));
+                            })
                     }
                 })
                 .catch((error) => {
