@@ -9,6 +9,9 @@ const salt = 'salt';
 const merchant_id = 0;
 
 const Users = require('./models/users'); // Users model
+// const Operations = require("./models/operations");
+const withdraw = require("./functions/withdraw");
+const Operations = require("./models/operations");
 
 // register view engine
 app.set('view engine', 'ejs');
@@ -68,7 +71,6 @@ app.post('/get_account_details', (req, res) => {
 
 app.post('/withdraw', (req, res) => {
     let transaction_id = req.body.data.transaction_id;
-    let response_data;
     const Operations = require('./models/operations');
 
     res.setHeader('Content-Type', 'application/json');
@@ -76,38 +78,62 @@ app.post('/withdraw', (req, res) => {
     Operations
         .findOne({transaction_id:transaction_id})
         .then(result => {
+            // Checking if current transaction exists
             if (result) {
                 response_data = result.response_data;
                 res.send(JSON.parse(response_data));
-            }
-        })
-        .then(()=>{
-            if (!response_data) {
-            }
-        })
-        .catch((err) => {
-            console.log(err);
-        })
+            } else {
+                Operations
+                .findOne().sort('-response_data.operation_id')
+                    .then((max_o_d) => {
+                        console.log(max_o_d);
+                        let new_operation_id;
+                        let user_id = req.body.data.user_id;
 
-    // Get user data
-    // Users
-    //     .findOne({user_id:user_id})
-    //     .then((user_data) => {
-    //         let withdraw = require('./functions/withdraw');
-    //
-    //         let operation_data = withdraw.withdraw(salt, merchant_id, req.body, user_data);
-    //
-    //         console.log('res.send');
-    //         res.send(operation_data);
-    //     })
-    //     .catch((error) => {
-    //         console.log(error);
-    //         res.setHeader('Content-Type', 'application/json');
-    //         res.send( JSON.stringify({
-    //             "result": false,
-    //             "err_code": 4
-    //         }));
-    //     })
+                        if (!max_o_d){
+                            new_operation_id = 1;
+                        } else {
+                            new_operation_id = max_o_d.response_data.operation_id + 1;
+                        }
+
+                        Users
+                            .findOne({user_id:user_id})
+                            .then((user_data) => {
+                                let withdraw = require('./functions/withdraw');
+                                let response_data = withdraw.withdraw(salt, merchant_id, new_operation_id, req.body, user_data);
+
+                                // Save new operation
+                                if (response_data.result){
+                                    let new_operation = new Operations({
+                                        transaction_id: transaction_id,
+                                        response_data:response_data
+                                    });
+                                    new_operation.save()
+                                        .then((operation_result) => {
+                                            res.send(response_data);
+                                        })
+                                        .catch((err) => {
+                                            console.log(err);
+                                        })
+                                }
+                            })
+                            .catch((err)=>{
+                                console.log(err);
+                                res.send({
+                                    "result": false,
+                                    "err_code": 5
+                                })
+                            })
+                    })
+            }
+        })
+        .catch((err)=>{
+            console.log(err);
+            res.send({
+                "result": false,
+                "err_code": 5
+            })
+        })
 })
 
 // Https server
