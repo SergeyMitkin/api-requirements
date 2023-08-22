@@ -18,7 +18,7 @@ function get_account_details(salt, merchant_id, req_body, user_data) {
         let hash = utils.sha256(time, JSON.stringify(user_params_sort), salt);
 
         // Request structure and parameters check
-        if (!utils.requestCheck(req_body))
+        if (!requestCheck(req_body))
         {
             err_code = 2
         }
@@ -42,6 +42,40 @@ function get_account_details(salt, merchant_id, req_body, user_data) {
             "err_code": err_code
         }
     }
+}
+
+function requestCheck(req_body) {
+    let data = req_body.data;
+    let params_length = Object.keys(data).length;
+
+    let nec_params = ['merchant_id', 'user_id'];
+    let opt_param = 'session_id';
+
+    if ((params_length === 2 || params_length === 3) && utils.isAlphabetSorted(data)) {
+        if (params_length === 2) {
+            nec_params.forEach((e) => {
+                if (!e in data){
+                    return false;
+                }
+            })
+        }
+        if (Object.keys(data).length === 3) {
+            nec_params.push(opt_param);
+            nec_params.forEach((e) => {
+                if (!e in data) {
+                    return false;
+                }
+            })
+        }
+    } else {
+        return false;
+    }
+
+    return (Object.keys(req_body).length === 3
+        && 'time' in req_body
+        && 'data' in req_body
+        && 'hash' in req_body
+    );
 }
 
 module.exports = {

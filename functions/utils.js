@@ -46,21 +46,9 @@ function isAlphabetSorted(data) {
     return true;
 }
 
-function requestCheck(req_body) {
-    let data = req_body.data;
-
-    return (Object.keys(req_body).length === 3
-        && 'time' in req_body
-        && 'data' in req_body
-        && 'hash' in req_body
-        && 'merchant_id' in data
-        && 'user_id' in data
-        && isAlphabetSorted(data));
-}
-
 module.exports = {
     getDateStr: getDateStr,
     sha256: sha256,
     sortObject: sortObject,
-    requestCheck: requestCheck
+    isAlphabetSorted: isAlphabetSorted
 }

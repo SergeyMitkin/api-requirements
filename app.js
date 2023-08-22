@@ -9,9 +9,6 @@ const salt = 'salt';
 const merchant_id = 0;
 
 const Users = require('./models/users'); // Users model
-// const Operations = require("./models/operations");
-const withdraw = require("./functions/withdraw");
-const Operations = require("./models/operations");
 
 // register view engine
 app.set('view engine', 'ejs');
@@ -80,21 +77,14 @@ app.post('/withdraw', (req, res) => {
         .then(result => {
             // Checking if current transaction exists
             if (result) {
-                response_data = result.response_data;
-                res.send(JSON.parse(response_data));
+                res.send(result.response_data);
             } else {
                 Operations
                 .findOne().sort('-response_data.operation_id')
                     .then((max_o_d) => {
-                        console.log(max_o_d);
-                        let new_operation_id;
                         let user_id = req.body.data.user_id;
 
-                        if (!max_o_d){
-                            new_operation_id = 1;
-                        } else {
-                            new_operation_id = max_o_d.response_data.operation_id + 1;
-                        }
+                        let new_operation_id = max_o_d ? max_o_d.response_data.operation_id + 1 : 1;
 
                         Users
                             .findOne({user_id:user_id})
@@ -109,30 +99,29 @@ app.post('/withdraw', (req, res) => {
                                         response_data:response_data
                                     });
                                     new_operation.save()
-                                        .then((operation_result) => {
+                                        .then(() => {
                                             res.send(response_data);
                                         })
                                         .catch((err) => {
                                             console.log(err);
+                                            res.send({"result": false, "err_code": 5})
                                         })
                                 }
                             })
                             .catch((err)=>{
                                 console.log(err);
-                                res.send({
-                                    "result": false,
-                                    "err_code": 5
-                                })
+                                res.send({"result": false, "err_code": 5})
                             })
                     })
+                    .catch((err)=>{
+                    console.log(err);
+                    res.send({"result": false, "err_code": 5})
+                })
             }
         })
         .catch((err)=>{
             console.log(err);
-            res.send({
-                "result": false,
-                "err_code": 5
-            })
+            res.send({"result": false, "err_code": 5})
         })
 })
 

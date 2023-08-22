@@ -35,7 +35,7 @@ function withdraw(salt, merchant_id, new_operation_id, req_body, user_data) {
         let hash = utils.sha256(time, JSON.stringify(user_params_sort), salt);
 
         // Request structure and parameters check
-        if (!utils.requestCheck(req_body))
+        if (!requestCheck(req_body))
         {
             err_code = 2;
         }
@@ -86,6 +86,51 @@ function withdraw(salt, merchant_id, new_operation_id, req_body, user_data) {
             "err_code": err_code
         }
     }
+}
+
+function requestCheck(req_body) {
+    let data = req_body.data;
+    let params_length = Object.keys(data).length;
+
+    let nec_params = [
+        'user_id',
+        'transaction_id',
+        'currency',
+        'amount',
+        'bonus_amount',
+        'game_type',
+        'game_id',
+        'merchant_id',
+        'bonus_game',
+        'bet_data'
+    ];
+    let opt_param = 'session_id';
+
+    if ((params_length === 10 || params_length === 11) && utils.isAlphabetSorted(data)) {
+        if (params_length === 10) {
+            nec_params.forEach((e) => {
+                if (!e in data) {
+                    return false;
+                }
+            })
+        }
+        if (Object.keys(data).length === 11) {
+            nec_params.push(opt_param);
+            nec_params.forEach((e) => {
+                if (!e in data) {
+                    return false;
+                }
+            })
+        }
+    } else {
+        return false;
+    }
+
+    return (Object.keys(req_body).length === 3
+        && 'time' in req_body
+        && 'data' in req_body
+        && 'hash' in req_body
+    );
 }
 
 module.exports = {
