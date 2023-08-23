@@ -1,4 +1,5 @@
 const utils = require("./utils");
+const {text} = require("express");
 
 function deposit(salt, merchant_id, new_operation_id, req_body, user_data) {
     let result = Boolean(user_data);
@@ -60,44 +61,52 @@ function deposit(salt, merchant_id, new_operation_id, req_body, user_data) {
             "bonus_balance": user_bonus_balance.toFixed(2),
         }
     }
+    return {
+        "result": false,
+        "err_code": err_code
+    }
 }
 
 function requestCheck(req_body) {
     let data = req_body.data;
     let params_length = Object.keys(data).length;
+    let correct_params = true;
 
     let nec_params = [
+        'amount',
+        'bet_data',
+        'bonus_game',
+        'currency',
+        'game_data',
+        'game_id',
+        'game_type',
+        'merchant_id',
+        'start_operation_id',
         'user_id',
         'transaction_id',
-        'currency',
-        'amount',
-        'bonus_amount',
-        'game_type',
-        'game_id',
-        'merchant_id',
-        'bonus_game',
-        'bet_data'
     ];
     let opt_param = 'session_id';
 
-    if ((params_length === 10 || params_length === 11) && utils.isAlphabetSorted(data)) {
-        if (params_length === 10) {
-            nec_params.forEach((e) => {
-                if (!e in data) {
-                    return false;
+    if ((params_length === 11 || params_length === 12) && utils.isAlphabetSorted(data)) {
+        if (params_length === 11) {
+            Object.keys(data).forEach((e) => {
+                if(!nec_params.includes(e)){
+                    correct_params = false;
                 }
             })
         }
-        if (Object.keys(data).length === 11) {
+        if (correct_params && Object.keys(data).length === 12) {
             nec_params.push(opt_param);
-            nec_params.forEach((e) => {
-                if (!e in data) {
-                    return false;
+            Object.keys(data).forEach((e) => {
+                if(!nec_params.includes(e)){
+                    correct_params = false;
                 }
             })
         }
-    } else {
-        return false;
+    }
+
+    if (!correct_params){
+        return false
     }
 
     return (Object.keys(req_body).length === 3

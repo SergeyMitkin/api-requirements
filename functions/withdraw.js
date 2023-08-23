@@ -75,6 +75,7 @@ function withdraw(salt, merchant_id, new_operation_id, req_body, user_data) {
 function requestCheck(req_body) {
     let data = req_body.data;
     let params_length = Object.keys(data).length;
+    let correct_params = true;
 
     let nec_params = [
         'user_id',
@@ -92,22 +93,24 @@ function requestCheck(req_body) {
 
     if ((params_length === 10 || params_length === 11) && utils.isAlphabetSorted(data)) {
         if (params_length === 10) {
-            nec_params.forEach((e) => {
-                if (!e in data) {
-                    return false;
+            Object.keys(data).forEach((e) => {
+                if(!nec_params.includes(e)){
+                    correct_params = false;
                 }
             })
         }
         if (Object.keys(data).length === 11) {
             nec_params.push(opt_param);
-            nec_params.forEach((e) => {
-                if (!e in data) {
-                    return false;
+            Object.keys(data).forEach((e) => {
+                if(!nec_params.includes(e)){
+                    correct_params = false;
                 }
             })
         }
-    } else {
-        return false;
+    }
+
+    if (!correct_params){
+        return false
     }
 
     return (Object.keys(req_body).length === 3

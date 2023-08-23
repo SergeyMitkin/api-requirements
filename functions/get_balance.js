@@ -53,28 +53,31 @@ function get_balance(salt, merchant_id, req_body, user_data) {
 function requestCheck(req_body) {
     let data = req_body.data;
     let params_length = Object.keys(data).length;
+    let correct_params = true;
 
     let nec_params = ['merchant_id', 'user_id'];
     let opt_param = 'session_id';
 
     if ((params_length === 2 || params_length === 3) && utils.isAlphabetSorted(data)) {
         if (params_length === 2) {
-            nec_params.forEach((e) => {
-                if (!e in data){
-                    return false;
+            Object.keys(data).forEach((e) => {
+                if(!nec_params.includes(e)){
+                    correct_params = false;
                 }
             })
         }
         if (Object.keys(data).length === 3) {
             nec_params.push(opt_param);
-            nec_params.forEach((e) => {
-                if (!e in data) {
-                    return false;
+            Object.keys(data).forEach((e) => {
+                if(!nec_params.includes(e)){
+                    correct_params = false;
                 }
             })
         }
-    } else {
-        return false;
+    }
+
+    if (!correct_params){
+        return false
     }
 
     return (Object.keys(req_body).length === 3
