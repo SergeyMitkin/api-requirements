@@ -137,6 +137,76 @@ app.post('/withdraw', (req, res) => {
         })
 })
 
+app.post('/deposit', (req, res) => {
+    let transaction_id = req.body.data.transaction_id;
+    const Operations = require('./models/operations');
+
+    res.setHeader('Content-Type', 'application/json');
+
+    Operations
+        .findOne({transaction_id:transaction_id})
+        .then(result => {
+            // Checking if current transaction exists
+            if (result) {
+                res.send(result.response_data);
+            } else {
+                Operations
+                    .findOne().sort('-response_data.operation_id')
+                    .then((max_o_d) => {
+                        let user_id = req.body.data.user_id;
+
+                        let new_operation_id = max_o_d ? max_o_d.response_data.operation_id + 1 : 1;
+
+                        Users
+                            .findOne({user_id:user_id})
+                            .then((user_data) => {
+                                let deposit = require('./functions/deposit');
+
+                                let response_data = deposit.deposit(salt, merchant_id, new_operation_id, req.body, user_data);
+
+                                if (response_data.result) {
+                                    user_data.amount = response_data.balance;
+                                    user_data.save()
+                                        .then(()=> {
+                                            let new_operation = new Operations({
+                                                transaction_id: transaction_id,
+                                                response_data:response_data
+                                            });
+                                            new_operation.save()
+                                                .then(() => {
+                                                    res.send(response_data);
+                                                })
+                                                .catch((err) => {
+                                                    console.log(err);
+                                                    res.send({"result": false, "err_code": 4})
+                                                })
+                                        })
+                                        .catch((err)=>{
+                                            console.log(err);
+                                            res.send({"result": false, "err_code": 4})
+                                        })
+                                } else {
+                                    res.send(response_data)
+                                }
+                            })
+                            .catch((err)=>{
+                                console.log(err);
+                                res.send({"result": false, "err_code": 4})
+                            })
+                    })
+                    .catch((err)=>{
+                        console.log(err);
+                        res.send({"result": false, "err_code": 4})
+                    })
+            }
+        })
+        .catch((err)=>{
+            console.log(err);
+            res.send({"result": false, "err_code": 4})
+        })
+})
+
+
 // Https server
 const sslServer = https.createServer({
     key: fs.readFileSync(__dirname + '/certificates/key.pem'),
