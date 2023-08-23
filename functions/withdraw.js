@@ -1,5 +1,4 @@
 const utils = require("./utils");
-const Operations = require('../models/operations');
 
 function withdraw(salt, merchant_id, new_operation_id, req_body, user_data) {
     let result = Boolean(user_data);
@@ -29,15 +28,13 @@ function withdraw(salt, merchant_id, new_operation_id, req_body, user_data) {
             transaction_id: transaction_id,
             user_id: user_id,
         };
-        let user_balance = user_data.amount - bet_amount;
-        let user_bonus_balance = user_data.bonus_amount - bet_bonus_amount;
         let time = utils.getDateStr();
         let req_hash = req_body.hash;
         let user_params_sort = utils.sortObject(user_params);
         let hash = utils.sha256(time, JSON.stringify(user_params_sort), salt);
 
         // Request structure and parameters check
-        if (!requestCheck(req_body))
+        if (bet_amount < 0 || bet_bonus_amount < 0 || !requestCheck(req_body))
         {
             err_code = 2;
         }
@@ -45,31 +42,16 @@ function withdraw(salt, merchant_id, new_operation_id, req_body, user_data) {
         else if (hash.digest('hex') !== req_hash) {
             err_code = 1;
         }
-        // Check the amount of money
-        else if (user_balance < 0 || user_bonus_balance) {
-            err_code = 4;
-        }
     } else {
         err_code = 3;
     }
 
     if (err_code === 0) {
-        // Amount update
-        if (user_data && (bet_amount > 0 || bet_bonus_amount > 0)) {
-            if (bet_amount > 0) {
-                user_data.amount = user_balance;
-            }
-            if (bet_bonus_amount > 0) {
-                user_data.bonus_amount = user_bonus_balance;
-            }
-            user_data.save()
-                .catch((err) => {
-                    console.log(err);
-                })
-        }
+        // Balance check
+        let user_balance = user_data.amount - bet_amount;
+        let user_bonus_balance = user_data.bonus_amount - bet_bonus_amount;
 
-        // If amount updated
-        if (user_data.isModified('amount') || user_data.isModified('bonus_amount')) {
+        if (user_balance >= 0 && user_bonus_balance >= 0) {
             return {
                 "result": true,
                 "err_code": err_code,
@@ -80,7 +62,7 @@ function withdraw(salt, merchant_id, new_operation_id, req_body, user_data) {
         } else {
             return {
                 "result": false,
-                "err_code": 5
+                "err_code": 4
             }
         }
     }

@@ -8,7 +8,8 @@ const PORT = 443;
 const salt = 'salt';
 const merchant_id = 0;
 
-const Users = require('./models/users'); // Users model
+const Users = require('./models/users');
+const Operations = require("./models/operations"); // Users model
 
 // register view engine
 app.set('view engine', 'ejs');
@@ -90,24 +91,33 @@ app.post('/withdraw', (req, res) => {
                             .findOne({user_id:user_id})
                             .then((user_data) => {
                                 let withdraw = require('./functions/withdraw');
+
                                 let response_data = withdraw.withdraw(salt, merchant_id, new_operation_id, req.body, user_data);
 
-                                // Save new operation
-                                if (response_data.result){
-                                    let new_operation = new Operations({
-                                        transaction_id: transaction_id,
-                                        response_data:response_data
-                                    });
-                                    new_operation.save()
-                                        .then(() => {
-                                            res.send(response_data);
+                                if (response_data.result) {
+                                    user_data.amount = response_data.balance;
+                                    user_data.bonus_amount = response_data.bonus_balance;
+                                    user_data.save()
+                                        .then(()=> {
+                                            let new_operation = new Operations({
+                                                transaction_id: transaction_id,
+                                                response_data:response_data
+                                            });
+                                            new_operation.save()
+                                                .then(() => {
+                                                    res.send(response_data);
+                                                })
+                                                .catch((err) => {
+                                                    console.log(err);
+                                                    res.send({"result": false, "err_code": 5})
+                                                })
                                         })
-                                        .catch((err) => {
+                                        .catch((err)=>{
                                             console.log(err);
                                             res.send({"result": false, "err_code": 5})
                                         })
                                 } else {
-                                    res.send(response_data);
+                                    res.send(response_data)
                                 }
                             })
                             .catch((err)=>{
