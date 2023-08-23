@@ -5,7 +5,6 @@ function deposit(salt, merchant_id, new_operation_id, req_body, user_data) {
     let err_code = 0;
 
     let bet_amount = req_body.data.amount;
-    let bet_bonus_amount = req_body.data.bonus_amount;
     let bet_data = req_body.data.bet_data;
     let bonus_game = req_body.data.bonus_game;
     let currency = req_body.data.currency;
@@ -37,7 +36,7 @@ function deposit(salt, merchant_id, new_operation_id, req_body, user_data) {
         let hash = utils.sha256(time, JSON.stringify(user_params_sort), salt).digest('hex');
 
         // Request structure and parameters check
-        if (bet_amount < 0 || bet_bonus_amount < 0 || !requestCheck(req_body))
+        if (bet_amount < 0 || !requestCheck(req_body))
         {
             err_code = 2;
         }
