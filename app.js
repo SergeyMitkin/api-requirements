@@ -106,6 +106,8 @@ app.post('/withdraw', (req, res) => {
                                             console.log(err);
                                             res.send({"result": false, "err_code": 5})
                                         })
+                                } else {
+                                    res.send(response_data);
                                 }
                             })
                             .catch((err)=>{

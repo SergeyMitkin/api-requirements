@@ -29,6 +29,8 @@ function withdraw(salt, merchant_id, new_operation_id, req_body, user_data) {
             transaction_id: transaction_id,
             user_id: user_id,
         };
+        let user_balance = user_data.amount - bet_amount;
+        let user_bonus_balance = user_data.bonus_amount - bet_bonus_amount;
         let time = utils.getDateStr();
         let req_hash = req_body.hash;
         let user_params_sort = utils.sortObject(user_params);
@@ -43,14 +45,15 @@ function withdraw(salt, merchant_id, new_operation_id, req_body, user_data) {
         else if (hash.digest('hex') !== req_hash) {
             err_code = 1;
         }
+        // Check the amount of money
+        else if (user_balance < 0 || user_bonus_balance) {
+            err_code = 4;
+        }
     } else {
         err_code = 3;
     }
 
     if (err_code === 0) {
-        let user_balance = user_data.amount - bet_amount;
-        let user_bonus_balance = user_data.bonus_amount - bet_bonus_amount;
-
         // Amount update
         if (user_data && (bet_amount > 0 || bet_bonus_amount > 0)) {
             if (bet_amount > 0) {
@@ -80,11 +83,10 @@ function withdraw(salt, merchant_id, new_operation_id, req_body, user_data) {
                 "err_code": 5
             }
         }
-    } else {
-        return {
-            "result": false,
-            "err_code": err_code
-        }
+    }
+    return {
+        "result": false,
+        "err_code": err_code
     }
 }
 
