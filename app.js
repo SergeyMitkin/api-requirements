@@ -9,7 +9,6 @@ const salt = 'salt';
 const merchant_id = 0;
 
 const Users = require('./models/users');
-const Operations = require("./models/operations"); // Users model
 
 // register view engine
 app.set('view engine', 'ejs');
@@ -69,43 +68,45 @@ app.post('/get_account_details', (req, res) => {
 
 app.post('/withdraw', (req, res) => {
     let transaction_id = req.body.data.transaction_id;
+    const req_method = 'withdraw';
+    module.exports.app = { req_method };
     const Operations = require('./models/operations');
 
     res.setHeader('Content-Type', 'application/json');
 
     Operations
-        .findOne({transaction_id:transaction_id})
+        .findOne({'req_body.data.transaction_id':transaction_id})
         .then(result => {
             // Checking if current transaction exists
             if (result) {
-                res.send(result.response_data);
+                res.send(result.res_data);
             } else {
                 Operations
-                .findOne().sort('-response_data.operation_id')
+                .findOne().sort('-res_data.operation_id')
                     .then((max_o_d) => {
                         let user_id = req.body.data.user_id;
 
-                        let new_operation_id = max_o_d ? max_o_d.response_data.operation_id + 1 : 1;
+                        let new_operation_id = max_o_d ? max_o_d.res_data.operation_id + 1 : 1;
 
                         Users
                             .findOne({user_id:user_id})
                             .then((user_data) => {
                                 let withdraw = require('./functions/withdraw');
 
-                                let response_data = withdraw.withdraw(salt, merchant_id, new_operation_id, req.body, user_data);
+                                let res_data = withdraw.withdraw(salt, merchant_id, new_operation_id, req.body, user_data);
 
-                                if (response_data.result) {
-                                    user_data.amount = response_data.balance;
-                                    user_data.bonus_amount = response_data.bonus_balance;
+                                if (res_data.result) {
+                                    user_data.amount = res_data.balance;
+                                    user_data.bonus_amount = res_data.bonus_balance;
                                     user_data.save()
                                         .then(()=> {
                                             let new_operation = new Operations({
-                                                transaction_id: transaction_id,
-                                                response_data:response_data
+                                                req_body: req.body,
+                                                res_data:res_data
                                             });
                                             new_operation.save()
                                                 .then(() => {
-                                                    res.send(response_data);
+                                                    res.send(res_data);
                                                 })
                                                 .catch((err) => {
                                                     console.log(err);
@@ -117,7 +118,7 @@ app.post('/withdraw', (req, res) => {
                                             res.send({"result": false, "err_code": 5})
                                         })
                                 } else {
-                                    res.send(response_data)
+                                    res.send(res_data)
                                 }
                             })
                             .catch((err)=>{
@@ -139,42 +140,46 @@ app.post('/withdraw', (req, res) => {
 
 app.post('/deposit', (req, res) => {
     let transaction_id = req.body.data.transaction_id;
+    const req_method = 'deposit';
+    module.exports.app = { req_method };
     const Operations = require('./models/operations');
 
     res.setHeader('Content-Type', 'application/json');
 
     Operations
-        .findOne({transaction_id:transaction_id})
+        .findOne({'req_body.data.transaction_id':transaction_id})
         .then(result => {
             // Checking if current transaction exists
             if (result) {
-                res.send(result.response_data);
+                console.log(res_data);
+                res.send(result.res_data);
             } else {
+                console.log('else');
                 Operations
-                    .findOne().sort('-response_data.operation_id')
+                    .findOne().sort('-res_data.operation_id')
                     .then((max_o_d) => {
                         let user_id = req.body.data.user_id;
 
-                        let new_operation_id = max_o_d ? max_o_d.response_data.operation_id + 1 : 1;
+                        let new_operation_id = max_o_d ? max_o_d.res_data.operation_id + 1 : 1;
 
                         Users
                             .findOne({user_id:user_id})
                             .then((user_data) => {
                                 let deposit = require('./functions/deposit');
 
-                                let response_data = deposit.deposit(salt, merchant_id, new_operation_id, req.body, user_data);
+                                let res_data = deposit.deposit(salt, merchant_id, new_operation_id, req.body, user_data);
 
-                                if (response_data.result) {
-                                    user_data.amount = response_data.balance;
+                                if (res_data.result) {
+                                    user_data.amount = res_data.balance;
                                     user_data.save()
                                         .then(()=> {
                                             let new_operation = new Operations({
-                                                transaction_id: transaction_id,
-                                                response_data:response_data
+                                                req_body: req.body,
+                                                res_data:res_data
                                             });
                                             new_operation.save()
                                                 .then(() => {
-                                                    res.send(response_data);
+                                                    res.send(res_data);
                                                 })
                                                 .catch((err) => {
                                                     console.log(err);
@@ -186,7 +191,7 @@ app.post('/deposit', (req, res) => {
                                             res.send({"result": false, "err_code": 4})
                                         })
                                 } else {
-                                    res.send(response_data)
+                                    res.send(res_data)
                                 }
                             })
                             .catch((err)=>{
@@ -206,6 +211,74 @@ app.post('/deposit', (req, res) => {
         })
 })
 
+app.post('/rollback', (req, res) => {
+    let transaction_id = req.body.data.transaction_id;
+    const req_method = 'rollback';
+    module.exports.app = { req_method };
+    const Operations = require('./models/operations');
+
+    res.setHeader('Content-Type', 'application/json');
+
+    Operations
+        .findOne({transaction_id:transaction_id})
+        .then(result => {
+            // Checking if current transaction exists
+            if (result) {
+                res.send(result.res_data);
+            } else {
+                Operations
+                    .findOne().sort('-res_data.operation_id')
+                    .then((max_o_d) => {
+                        let user_id = req.body.data.user_id;
+
+                        Users
+                            .findOne({user_id:user_id})
+                            .then((user_data) => {
+                                let rollback = require('./functions/rollback');
+
+                                let res_data = rollback.rollback(salt, merchant_id, req.body, user_data);
+
+                                if (res_data.result) {
+                                    user_data.amount = res_data.balance;
+                                    user_data.save()
+                                        .then(()=> {
+                                            let new_operation = new Operations({
+                                                transaction_id: transaction_id,
+                                                res_data:res_data
+                                            });
+                                            new_operation.save()
+                                                .then(() => {
+                                                    res.send(res_data);
+                                                })
+                                                .catch((err) => {
+                                                    console.log(err);
+                                                    res.send({"result": false, "err_code": 4})
+                                                })
+                                        })
+                                        .catch((err)=>{
+                                            console.log(err);
+                                            res.send({"result": false, "err_code": 4})
+                                        })
+                                } else {
+                                    res.send(res_data)
+                                }
+                            })
+                            .catch((err)=>{
+                                console.log(err);
+                                res.send({"result": false, "err_code": 4})
+                            })
+                    })
+                    .catch((err)=>{
+                        console.log(err);
+                        res.send({"result": false, "err_code": 4})
+                    })
+            }
+        })
+        .catch((err)=>{
+            console.log(err);
+            res.send({"result": false, "err_code": 4})
+        })
+})
 
 // Https server
 const sslServer = https.createServer({
