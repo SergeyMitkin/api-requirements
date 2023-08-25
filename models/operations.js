@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
-const { app } = require('../app');
 
 const bet_data = new Schema({
     bet_id: String,
@@ -18,7 +17,7 @@ const req_data_schema = new Schema({
     start_operation_id: String,
     bonus_amount: Number,
     game_type: Number,
-    game_id: {type:String, unique: true},
+    game_id: String,
     game_data: Schema.Types.Mixed,
     merchant_id: Number,
     session_id: String,
@@ -53,7 +52,7 @@ const res_data_schema = new Schema({
 const operationsSchema = new Schema({
     req_body: req_body_schema,
     res_data: res_data_schema,
-    is_rolled_back: {type: Boolean, default: false}
+    is_rolled_back: Boolean
 });
 
 const Operations = mongoose.model('Operations', operationsSchema);

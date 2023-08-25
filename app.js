@@ -68,8 +68,6 @@ app.post('/get_account_details', (req, res) => {
 
 app.post('/withdraw', (req, res) => {
     let transaction_id = req.body.data.transaction_id;
-    const req_method = 'withdraw';
-    module.exports.app = { req_method };
     const Operations = require('./models/operations');
 
     res.setHeader('Content-Type', 'application/json');
@@ -102,7 +100,8 @@ app.post('/withdraw', (req, res) => {
                                         .then(()=> {
                                             let new_operation = new Operations({
                                                 req_body: req.body,
-                                                res_data:res_data
+                                                res_data:res_data,
+                                                is_rolled_back: false
                                             });
                                             new_operation.save()
                                                 .then(() => {
@@ -140,8 +139,6 @@ app.post('/withdraw', (req, res) => {
 
 app.post('/deposit', (req, res) => {
     let transaction_id = req.body.data.transaction_id;
-    const req_method = 'deposit';
-    module.exports.app = { req_method };
     const Operations = require('./models/operations');
 
     res.setHeader('Content-Type', 'application/json');
