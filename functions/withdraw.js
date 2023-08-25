@@ -62,7 +62,7 @@ function withdraw(salt, merchant_id, new_operation_id, req_body, user_data) {
         } else {
             return {
                 "result": false,
-                "err_code": 4
+                "err_code": 5
             }
         }
     }

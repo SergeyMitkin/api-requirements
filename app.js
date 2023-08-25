@@ -9,6 +9,7 @@ const salt = 'salt';
 const merchant_id = 0;
 
 const Users = require('./models/users');
+const Operations = require("./models/operations");
 
 // register view engine
 app.set('view engine', 'ejs');
@@ -109,12 +110,12 @@ app.post('/withdraw', (req, res) => {
                                                 })
                                                 .catch((err) => {
                                                     console.log(err);
-                                                    res.send({"result": false, "err_code": 5})
+                                                    res.send({"result": false, "err_code": 4})
                                                 })
                                         })
                                         .catch((err)=>{
                                             console.log(err);
-                                            res.send({"result": false, "err_code": 5})
+                                            res.send({"result": false, "err_code": 4})
                                         })
                                 } else {
                                     res.send(res_data)
@@ -122,18 +123,18 @@ app.post('/withdraw', (req, res) => {
                             })
                             .catch((err)=>{
                                 console.log(err);
-                                res.send({"result": false, "err_code": 5})
+                                res.send({"result": false, "err_code": 4})
                             })
                     })
                     .catch((err)=>{
                     console.log(err);
-                    res.send({"result": false, "err_code": 5})
+                    res.send({"result": false, "err_code": 4})
                 })
             }
         })
         .catch((err)=>{
             console.log(err);
-            res.send({"result": false, "err_code": 5})
+            res.send({"result": false, "err_code": 4})
         })
 })
 
@@ -148,10 +149,9 @@ app.post('/deposit', (req, res) => {
         .then(result => {
             // Checking if current transaction exists
             if (result) {
-                console.log(res_data);
                 res.send(result.res_data);
-            } else {
-                console.log('else');
+            }
+            else {
                 Operations
                     .findOne().sort('-res_data.operation_id')
                     .then((max_o_d) => {
@@ -210,44 +210,41 @@ app.post('/deposit', (req, res) => {
 
 app.post('/rollback', (req, res) => {
     let transaction_id = req.body.data.transaction_id;
-    const req_method = 'rollback';
-    module.exports.app = { req_method };
     const Operations = require('./models/operations');
 
     res.setHeader('Content-Type', 'application/json');
 
+    // Checking if withdraw transaction exists
     Operations
-        .findOne({transaction_id:transaction_id})
-        .then(result => {
-            // Checking if current transaction exists
-            if (result) {
-                res.send(result.res_data);
-            } else {
-                Operations
-                    .findOne().sort('-res_data.operation_id')
-                    .then((max_o_d) => {
-                        let user_id = req.body.data.user_id;
+        .findOne({'req_body.data.transaction_id':transaction_id})
+        .then(withdraw => {
+            if (withdraw) {
+                let is_rolled_back = withdraw.is_rolled_back;
 
-                        Users
-                            .findOne({user_id:user_id})
-                            .then((user_data) => {
-                                let rollback = require('./functions/rollback');
+                if(typeof(is_rolled_back) != "undefined" && is_rolled_back !== null)
+                {
+                    let user_id = req.body.data.user_id;
 
-                                let res_data = rollback.rollback(salt, merchant_id, req.body, user_data);
+                    Users
+                        .findOne({user_id:user_id})
+                        .then((user_data) => {
+                            let rollback = require('./functions/rollback');
 
-                                if (res_data.result) {
+                            let res_data = rollback.rollback(salt, merchant_id, req.body, withdraw, is_rolled_back, user_data);
+
+                            if (res_data.result) {
+                                // After rollback user_data updates
+                                if (is_rolled_back === false) {
                                     user_data.amount = res_data.balance;
+                                    user_data.amount = res_data.bonus_balance
                                     user_data.save()
                                         .then(()=> {
-                                            let new_operation = new Operations({
-                                                transaction_id: transaction_id,
-                                                res_data:res_data
-                                            });
-                                            new_operation.save()
-                                                .then(() => {
+                                            withdraw.is_rolled_back = true;
+                                            withdraw.save()
+                                                .then(()=> {
                                                     res.send(res_data);
                                                 })
-                                                .catch((err) => {
+                                                .catch((err)=>{
                                                     console.log(err);
                                                     res.send({"result": false, "err_code": 4})
                                                 })
@@ -257,18 +254,21 @@ app.post('/rollback', (req, res) => {
                                             res.send({"result": false, "err_code": 4})
                                         })
                                 } else {
-                                    res.send(res_data)
+                                    res.send(res_data);
                                 }
-                            })
-                            .catch((err)=>{
-                                console.log(err);
-                                res.send({"result": false, "err_code": 4})
-                            })
-                    })
-                    .catch((err)=>{
-                        console.log(err);
-                        res.send({"result": false, "err_code": 4})
-                    })
+                            } else {
+                                res.send(res_data)
+                            }
+                        })
+                        .catch((err)=>{
+                            console.log(err);
+                            res.send({"result": false, "err_code": 4})
+                        })
+                } else {
+                    res.send({"result": false, "err_code": 4})
+                }
+            } else {
+                res.send({"result": false, "err_code": 4})
             }
         })
         .catch((err)=>{

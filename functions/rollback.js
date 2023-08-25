@@ -1,14 +1,12 @@
 const utils = require("./utils");
 
-function rollback(salt, merchant_id, req_body, user_data) {
-    let result = Boolean(user_data);
+function rollback(salt, merchant_id, req_body, withdraw, is_rolled_back, user_data) {
     let err_code = 0;
-
     let bonus_game = req_body.data.bonus_game;
     let transaction_id = req_body.data.transaction_id;
 
     // User check
-    if (result) {
+    if (user_data) {
         let user_id = user_data.user_id;
         let user_params = {
             bonus_game: bonus_game,
@@ -35,24 +33,25 @@ function rollback(salt, merchant_id, req_body, user_data) {
     }
 
     if (err_code === 0) {
-        // Balance check
-        let user_balance = user_data.amount - bet_amount;
-        let user_bonus_balance = user_data.bonus_amount - bet_bonus_amount;
+        let user_balance = user_data.amount;
+        let user_bonus_balance = user_data.bonus_amount;
 
-        if (user_balance >= 0 && user_bonus_balance >= 0) {
-            return {
-                "result": true,
-                "err_code": err_code,
-                "balance": user_balance.toFixed(2),
-                "bonus_balance": user_bonus_balance.toFixed(2),
-            }
-        } else {
-            return {
-                "result": false,
-                "err_code": 4
-            }
+        if(is_rolled_back === false) {
+            let bet_amount = withdraw.req_body.data.amount;
+            let bet_bonus_amount = withdraw.req_body.data.bonus_amount;
+
+            user_balance += bet_amount;
+            user_bonus_balance += bet_bonus_amount;
+        }
+
+        return {
+            "result": true,
+            "err_code": err_code,
+            "balance": user_balance.toFixed(2),
+            "bonus_balance": user_bonus_balance.toFixed(2),
         }
     }
+
     return {
         "result": false,
         "err_code": err_code
