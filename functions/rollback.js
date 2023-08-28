@@ -7,17 +7,10 @@ function rollback(salt, merchant_id, req_body, withdraw, is_rolled_back, user_da
 
     // User check
     if (user_data) {
-        let user_id = user_data.user_id;
-        let user_params = {
-            bonus_game: bonus_game,
-            merchant_id: String(merchant_id),
-            transaction_id: transaction_id,
-            user_id: user_id,
-        };
-        let time = utils.getDateStr();
+        let req_data = req_body.data;
+        let time = req_body.time;
         let req_hash = req_body.hash;
-        let user_params_sort = utils.sortObject(user_params);
-        let hash = utils.sha256(time, JSON.stringify(user_params_sort), salt);
+        let hash = utils.sha256(time, JSON.stringify(req_data), salt);
 
         // Request structure and parameters check
         if (!requestCheck(req_body))

@@ -6,35 +6,13 @@ function deposit(salt, merchant_id, new_operation_id, req_body, user_data) {
     let err_code = 0;
 
     let bet_amount = req_body.data.amount;
-    let bet_data = req_body.data.bet_data;
-    let bonus_game = req_body.data.bonus_game;
-    let currency = req_body.data.currency;
-    let game_id = req_body.data.game_id;
-    let game_type = req_body.data.game_type;
-    let game_data = req_body.data.game_data;
-    let transaction_id = req_body.data.transaction_id;
-    let start_operation_id = req_body.data.start_operation_id;
 
     // User check
     if (result) {
-        let user_id = user_data.user_id;
-        let user_params = {
-            amount: bet_amount,
-            bet_data: bet_data,
-            bonus_game: bonus_game,
-            currency: currency,
-            game_id: game_id,
-            game_type: game_type,
-            game_data: game_data,
-            merchant_id: String(merchant_id),
-            transaction_id: transaction_id,
-            start_operation_id: start_operation_id,
-            user_id: user_id,
-        };
-        let time = utils.getDateStr();
+        let req_data = req_body.data;
+        let time = req_body.time;
         let req_hash = req_body.hash;
-        let user_params_sort = utils.sortObject(user_params);
-        let hash = utils.sha256(time, JSON.stringify(user_params_sort), salt).digest('hex');
+        let hash = utils.sha256(time, JSON.stringify(req_data), salt).digest('hex');
 
         // Request structure and parameters check
         if (bet_amount < 0 || !requestCheck(req_body))
